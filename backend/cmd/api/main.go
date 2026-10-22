@@ -88,6 +88,7 @@ func main() {
 		r.Get("/products/{id}/movements", productHandler.ListMovements)
 
 		// Orders
+		r.Get("/orders", orderHandler.List)
 		r.Post("/orders", orderHandler.Create)
 		r.Get("/orders/{id}", orderHandler.Get)
 		r.Post("/orders/{id}/cancel", orderHandler.Cancel)

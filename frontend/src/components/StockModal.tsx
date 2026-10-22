@@ -54,7 +54,7 @@ export default function StockModal({ product, onClose, onSuccess }: Props) {
               {product.name} · Current stock: <strong style={{ color: product.stock <= 10 ? 'var(--warning)' : 'var(--text)' }}>{product.stock}</strong>
             </p>
           </div>
-          <button className="btn-icon" onClick={onClose}>✕</button>
+          <button className="btn-icon" onClick={onClose}>X</button>
         </div>
 
         <div className="modal-body">
@@ -67,14 +67,14 @@ export default function StockModal({ product, onClose, onSuccess }: Props) {
                 style={type === 'in' ? { background: 'var(--success)' } : {}}
                 onClick={() => setType('in')}
               >
-                ↑ Stock In
+                Stock In
               </button>
               <button
                 className={`filter-tab ${type === 'out' ? 'active' : ''}`}
                 style={type === 'out' ? { background: 'var(--danger)' } : {}}
                 onClick={() => setType('out')}
               >
-                ↓ Stock Out
+                Stock Out
               </button>
             </div>
           </div>
@@ -102,7 +102,6 @@ export default function StockModal({ product, onClose, onSuccess }: Props) {
 
           {error && (
             <div className="alert alert-error">
-              <span>⚠</span>
               <span>{error}</span>
             </div>
           )}

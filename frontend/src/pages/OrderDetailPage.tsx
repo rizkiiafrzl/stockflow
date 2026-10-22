@@ -38,7 +38,6 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <div className="state-container">
-        <div className="state-icon" style={{ animation: 'spin 1s linear infinite' }}>⟳</div>
         <div className="state-title">Loading order...</div>
       </div>
     )
@@ -47,7 +46,6 @@ export default function OrderDetailPage() {
   if (error) {
     return (
       <div className="state-container">
-        <div className="state-icon">⚡</div>
         <div className="state-title">Failed to load order</div>
         <div className="state-subtitle">{error.message}</div>
         <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={refetch}>Retry</button>
@@ -58,9 +56,8 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="state-container">
-        <div className="state-icon">🔍</div>
         <div className="state-title">Order not found</div>
-        <button className="btn btn-ghost" style={{ marginTop: 12 }} onClick={() => navigate('/')}>Back</button>
+        <button className="btn btn-ghost" style={{ marginTop: 12 }} onClick={() => navigate('/orders')}>Back to Orders</button>
       </div>
     )
   }
@@ -69,9 +66,14 @@ export default function OrderDetailPage() {
     <div>
       <div className="page-header">
         <div>
-          <button className="btn btn-ghost btn-sm" style={{ marginBottom: 8 }} onClick={() => navigate('/')}>
-            ← Back to Products
-          </button>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate('/orders')}>
+              Back to Orders
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}>
+              Products
+            </button>
+          </div>
           <h1 className="page-title">Order #{order.id}</h1>
           <p className="page-subtitle">{formatRelative(order.created_at)}</p>
         </div>
@@ -139,7 +141,6 @@ export default function OrderDetailPage() {
 
           {order.status === 'CANCELLED' && (
             <div className="alert alert-warning">
-              <span>ℹ</span>
               <span>Stock has been restored to inventory.</span>
             </div>
           )}
@@ -152,11 +153,11 @@ export default function OrderDetailPage() {
           <div className="modal" style={{ maxWidth: 380 }}>
             <div className="modal-header">
               <h2>Cancel Order?</h2>
-              <button className="btn-icon" onClick={() => setShowConfirm(false)}>✕</button>
+              <button className="btn-icon" onClick={() => setShowConfirm(false)}>X</button>
             </div>
             <div className="modal-body">
               <p>Cancelling order #{order.id} will restore stock for all items. This cannot be undone.</p>
-              {cancelError && <div className="alert alert-error"><span>⚠</span><span>{cancelError}</span></div>}
+              {cancelError && <div className="alert alert-error"><span>{cancelError}</span></div>}
             </div>
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => setShowConfirm(false)} disabled={cancelling}>Back</button>

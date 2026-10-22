@@ -85,6 +85,13 @@ type MovementsResponse struct {
 	Data []StockMovement `json:"data"`
 }
 
+type OrdersResponse struct {
+	Data  []SalesOrder `json:"data"`
+	Page  int          `json:"page"`
+	Limit int          `json:"limit"`
+	Total int          `json:"total"`
+}
+
 // ErrorCode defines machine-readable error codes.
 type ErrorCode string
 

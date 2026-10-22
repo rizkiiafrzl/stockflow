@@ -129,3 +129,29 @@ func (h *OrderHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	}
 	respond(w, http.StatusOK, order)
 }
+
+// GET /api/orders?page=&limit=
+func (h *OrderHandler) List(w http.ResponseWriter, r *http.Request) {
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil || limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	orders, total, err := h.repo.ListOrders(r.Context(), page, limit)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, map[string]string{"code": "INTERNAL_ERROR", "message": err.Error()})
+		return
+	}
+
+	respond(w, http.StatusOK, model.OrdersResponse{
+		Data:  orders,
+		Page:  page,
+		Limit: limit,
+		Total: total,
+	})
+}
+

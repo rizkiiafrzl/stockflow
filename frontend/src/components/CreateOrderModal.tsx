@@ -93,7 +93,7 @@ export default function CreateOrderModal({ onClose, onSuccess }: Props) {
       <div className="modal modal-lg">
         <div className="modal-header">
           <h2>Create Sales Order</h2>
-          <button className="btn-icon" onClick={onClose}>✕</button>
+          <button className="btn-icon" onClick={onClose}>X</button>
         </div>
 
         <div className="modal-body">
@@ -185,14 +185,13 @@ export default function CreateOrderModal({ onClose, onSuccess }: Props) {
                       </div>
 
                       {items.length > 1 && (
-                        <button className="remove-item-btn" onClick={() => removeItem(i)}>✕</button>
+                        <button className="remove-item-btn" onClick={() => removeItem(i)}>X</button>
                       )}
                     </div>
 
                     {/* Matched product preview info */}
                     {matched && (
                       <div className="product-hint">
-                        <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>✓</span>
                         <strong style={{ color: 'var(--text)' }}>{matched.name}</strong>
                         <span>·</span>
                         <span style={{ color: 'var(--accent)' }}>{formatRupiah(matched.price)}</span>
@@ -200,7 +199,7 @@ export default function CreateOrderModal({ onClose, onSuccess }: Props) {
                         <span>Tersedia: <strong style={{ color: matched.stock <= 10 ? 'var(--warning)' : 'var(--success)' }}>{matched.stock} unit</strong></span>
                         {isOverStock && (
                           <span style={{ color: 'var(--danger)', fontWeight: 600, marginLeft: 6 }}>
-                            ⚠ Qty melebihi stok yang ada ({matched.stock})
+                            [Qty melebihi stok tersedia: {matched.stock}]
                           </span>
                         )}
                       </div>
@@ -215,14 +214,13 @@ export default function CreateOrderModal({ onClose, onSuccess }: Props) {
               style={{ marginTop: 8, alignSelf: 'flex-start' }}
               onClick={addItem}
             >
-              + Add Item
+              Add Item
             </button>
           </div>
 
           {/* Insufficient stock error — highlights exact SKU */}
           {stockError && (
             <div className="alert alert-error">
-              <span>⚠</span>
               <div>
                 <strong>Insufficient Stock</strong>: SKU <code style={{ background: 'rgba(0,0,0,0.2)', padding: '1px 4px', borderRadius: 3 }}>{stockError.sku}</code> only has{' '}
                 <strong>{formatRupiah(stockError.available)} units</strong> available.
@@ -232,7 +230,6 @@ export default function CreateOrderModal({ onClose, onSuccess }: Props) {
 
           {globalError && (
             <div className="alert alert-error">
-              <span>⚠</span>
               <span>{globalError}</span>
             </div>
           )}

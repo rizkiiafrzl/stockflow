@@ -75,10 +75,10 @@ export default function ProductsPage() {
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn btn-ghost" onClick={() => setShowOrder(true)}>
-            🛒 New Order
+            New Order
           </button>
           <button className="btn btn-primary" onClick={() => setEditTarget(null)}>
-            + New Product
+            New Product
           </button>
         </div>
       </div>
@@ -86,12 +86,12 @@ export default function ProductsPage() {
       {/* Toolbar */}
       <div className="toolbar">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
           <input
             type="text"
             placeholder="Search by SKU or name..."
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
+            style={{ paddingLeft: 12 }}
           />
         </div>
         <div className="filter-tabs">
@@ -101,7 +101,7 @@ export default function ProductsPage() {
               className={`filter-tab ${filter === f ? 'active' : ''}`}
               onClick={() => setFilter(f)}
             >
-              {f === 'low' ? '⚠ Low Stock' : f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === 'low' ? 'Low Stock' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
@@ -136,7 +136,6 @@ export default function ProductsPage() {
               <tr>
                 <td colSpan={7}>
                   <div className="state-container">
-                    <div className="state-icon">⚡</div>
                     <div className="state-title">Failed to load</div>
                     <div className="state-subtitle">{error.message}</div>
                     <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={refetch}>Retry</button>
@@ -149,7 +148,6 @@ export default function ProductsPage() {
               <tr>
                 <td colSpan={7}>
                   <div className="state-container">
-                    <div className="state-icon">📭</div>
                     <div className="state-title">No products found</div>
                     <div className="state-subtitle">Try a different search or filter</div>
                   </div>
@@ -169,7 +167,7 @@ export default function ProductsPage() {
                 </td>
                 <td>
                   <span className={`badge ${p.is_active ? 'badge-active' : 'badge-inactive'}`}>
-                    {p.is_active ? '● Active' : '○ Inactive'}
+                    {p.is_active ? 'Active' : 'Inactive'}
                   </span>
                   {p.stock <= 10 && p.is_active && (
                     <span className="badge badge-low" style={{ marginLeft: 6 }}>Low</span>
@@ -179,21 +177,23 @@ export default function ProductsPage() {
                 <td>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button
-                      className="btn-icon"
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '3px 8px', fontSize: 12 }}
                       title="Adjust Stock"
                       onClick={() => setStockTarget(p)}
-                    >📊</button>
+                    >Stock</button>
                     <button
-                      className="btn-icon"
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '3px 8px', fontSize: 12 }}
                       title="Edit"
                       onClick={() => setEditTarget(p)}
-                    >✏️</button>
+                    >Edit</button>
                     <button
-                      className="btn-icon"
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '3px 8px', fontSize: 12, color: 'var(--danger)' }}
                       title="Delete"
-                      style={{ color: 'var(--danger)' }}
                       onClick={() => { setDeleteConfirm(p); setDeleteError(null) }}
-                    >🗑</button>
+                    >Delete</button>
                   </div>
                 </td>
               </tr>
@@ -206,13 +206,13 @@ export default function ProductsPage() {
           <div className="pagination">
             <span>Showing {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, data.total)} of {data.total}</span>
             <div className="pagination-controls">
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
+              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</button>
               {Array.from({ length: totalPages }, (_, i) => (
                 <button key={i} className={page === i + 1 ? 'active' : ''} onClick={() => setPage(i + 1)}>
                   {i + 1}
                 </button>
               ))}
-              <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next →</button>
+              <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
             </div>
           </div>
         )}
@@ -224,11 +224,11 @@ export default function ProductsPage() {
           <div className="modal" style={{ maxWidth: 380 }}>
             <div className="modal-header">
               <h2>Delete Product?</h2>
-              <button className="btn-icon" onClick={() => setDeleteConfirm(null)}>✕</button>
+              <button className="btn-icon" onClick={() => setDeleteConfirm(null)}>X</button>
             </div>
             <div className="modal-body">
               <p>Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?</p>
-              {deleteError && <div className="alert alert-error"><span>⚠</span><span>{deleteError}</span></div>}
+              {deleteError && <div className="alert alert-error"><span>{deleteError}</span></div>}
             </div>
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancel</button>
@@ -243,8 +243,8 @@ export default function ProductsPage() {
         <div className="modal-overlay" onClick={() => setCreatedOrder(null)}>
           <div className="modal" style={{ maxWidth: 420 }}>
             <div className="modal-header">
-              <h2>✅ Order Created!</h2>
-              <button className="btn-icon" onClick={() => setCreatedOrder(null)}>✕</button>
+              <h2>Order Created Successfully</h2>
+              <button className="btn-icon" onClick={() => setCreatedOrder(null)}>X</button>
             </div>
             <div className="modal-body">
               <div className="alert alert-success">

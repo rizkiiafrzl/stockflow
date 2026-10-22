@@ -73,6 +73,13 @@ export interface MovementsResponse {
   data: StockMovement[]
 }
 
+export interface OrdersResponse {
+  data: SalesOrder[]
+  page: number
+  limit: number
+  total: number
+}
+
 export interface APIErrorDetail {
   code: string
   message?: string

@@ -255,3 +255,63 @@ func (r *OrderRepository) CancelOrder(ctx context.Context, id int) (*model.Sales
 	}
 	return &order, nil
 }
+
+// ListOrders returns paginated sales orders with their items.
+func (r *OrderRepository) ListOrders(ctx context.Context, page, limit int) ([]model.SalesOrder, int, error) {
+	offset := (page - 1) * limit
+
+	var total int
+	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM sales_orders`).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count orders: %w", err)
+	}
+
+	rows, err := r.db.QueryContext(ctx,
+		`SELECT id, customer, status, total, created_at, cancelled_at
+		 FROM sales_orders
+		 ORDER BY created_at DESC
+		 LIMIT $1 OFFSET $2`,
+		limit, offset,
+	)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list orders: %w", err)
+	}
+	defer rows.Close()
+
+	var orders []model.SalesOrder
+	for rows.Next() {
+		var o model.SalesOrder
+		if err := rows.Scan(&o.ID, &o.Customer, &o.Status, &o.Total, &o.CreatedAt, &o.CancelledAt); err != nil {
+			return nil, 0, err
+		}
+		orders = append(orders, o)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch items for each order
+	for i := range orders {
+		itemRows, err := r.db.QueryContext(ctx,
+			`SELECT id, order_id, sku, qty, unit_price FROM sales_order_items WHERE order_id = $1`,
+			orders[i].ID,
+		)
+		if err == nil {
+			for itemRows.Next() {
+				var it model.SalesOrderItem
+				if err := itemRows.Scan(&it.ID, &it.OrderID, &it.SKU, &it.Qty, &it.UnitPrice); err == nil {
+					orders[i].Items = append(orders[i].Items, it)
+				}
+			}
+			itemRows.Close()
+		}
+		if orders[i].Items == nil {
+			orders[i].Items = []model.SalesOrderItem{}
+		}
+	}
+
+	if orders == nil {
+		orders = []model.SalesOrder{}
+	}
+	return orders, total, nil
+}
+

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import ProductsPage from './pages/ProductsPage'
+import OrdersPage from './pages/OrdersPage'
 import OrderDetailPage from './pages/OrderDetailPage'
 import './index.css'
 
@@ -16,10 +17,16 @@ export default function App() {
           <nav className="sidebar-nav">
             <NavLink
               to="/"
+              end
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              <span className="nav-icon">📦</span>
               Products
+            </NavLink>
+            <NavLink
+              to="/orders"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              Sales Orders
             </NavLink>
           </nav>
         </aside>
@@ -28,6 +35,7 @@ export default function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ProductsPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/:id" element={<OrderDetailPage />} />
           </Routes>
         </main>

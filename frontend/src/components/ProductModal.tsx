@@ -57,7 +57,7 @@ export default function ProductModal({ product, onClose, onSuccess }: Props) {
       <div className="modal">
         <div className="modal-header">
           <h2>{isEdit ? 'Edit Product' : 'New Product'}</h2>
-          <button className="btn-icon" onClick={onClose}>✕</button>
+          <button className="btn-icon" onClick={onClose}>X</button>
         </div>
 
         <div className="modal-body">
@@ -123,7 +123,6 @@ export default function ProductModal({ product, onClose, onSuccess }: Props) {
 
           {globalError && (
             <div className="alert alert-error">
-              <span>⚠</span>
               <span>{globalError}</span>
             </div>
           )}

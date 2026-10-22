@@ -12,6 +12,7 @@ import type {
   StockMovement,
   UpdateProductRequest,
   Product,
+  OrdersResponse,
 } from '../types'
 import { APIError } from '../types'
 
@@ -83,6 +84,14 @@ export function getMovements(id: number): Promise<MovementsResponse> {
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────
+
+export function getOrders(params?: { page?: number; limit?: number }): Promise<OrdersResponse> {
+  const q = new URLSearchParams()
+  if (params?.page) q.set('page', String(params.page))
+  if (params?.limit) q.set('limit', String(params.limit))
+  const qs = q.toString() ? `?${q.toString()}` : ''
+  return request<OrdersResponse>(`/orders${qs}`)
+}
 
 export function createOrder(data: CreateOrderRequest): Promise<SalesOrder> {
   return request<SalesOrder>('/orders', {

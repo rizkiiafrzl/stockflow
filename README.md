@@ -182,3 +182,132 @@ npm test
   }
   ```
 - The frontend UI specifically catches this error code, highlights the problematic SKU input in red, and renders a banner displaying the exact available quantity.
+
+---
+
+## 📡 API Contract & Ready-to-Run cURL Examples
+
+Assume the backend server is listening on `http://localhost:8080`.
+
+### 1. List Products (with search, pagination, and derived `last_movement_at`)
+```bash
+curl -X GET "http://localhost:8080/api/products?search=asus&page=1&limit=10"
+```
+
+### 2. Create Product
+```bash
+curl -X POST "http://localhost:8080/api/products" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sku": "SKU-013",
+    "name": "Wireless Mechanical Numpad",
+    "price": 320000
+  }'
+```
+
+### 3. Update Product
+```bash
+curl -X PUT "http://localhost:8080/api/products/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Laptop ASUS VivoBook 15 Pro",
+    "price": 8900000,
+    "is_active": true
+  }'
+```
+
+### 4. Delete Product (Rejected with 409 if has movement history)
+```bash
+curl -i -X DELETE "http://localhost:8080/api/products/1"
+```
+
+### 5. Adjust Stock (In / Out)
+```bash
+# Stock In
+curl -X POST "http://localhost:8080/api/products/1/stock" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "in",
+    "qty": 20,
+    "note": "Restock batch 2026-Q4"
+  }'
+
+# Stock Out (Overdraw returns 409 with available units)
+curl -i -X POST "http://localhost:8080/api/products/1/stock" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "out",
+    "qty": 9999,
+    "note": "Testing overdraw rejection"
+  }'
+```
+
+### 6. List Stock Movements
+```bash
+curl -X GET "http://localhost:8080/api/products/1/movements"
+```
+
+### 7. Create Sales Order (Atomic multi-item decrement)
+```bash
+# Successful order
+curl -X POST "http://localhost:8080/api/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer": "PT Sumber Rejeki",
+    "items": [
+      { "sku": "SKU-002", "qty": 2 },
+      { "sku": "SKU-003", "qty": 1 }
+    ]
+  }'
+
+# Insufficient stock order (returns 409 with exact SKU and available qty)
+curl -i -X POST "http://localhost:8080/api/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer": "Overdraw Tester",
+    "items": [
+      { "sku": "SKU-010", "qty": 999 }
+    ]
+  }'
+```
+
+### 8. Get Order Detail
+```bash
+curl -X GET "http://localhost:8080/api/orders/1"
+```
+
+### 9. Cancel Order (Restores inventory, idempotent 409 on second cancel)
+```bash
+curl -X POST "http://localhost:8080/api/orders/1/cancel"
+```
+
+---
+
+## 🔮 What I Would Improve Next
+
+Given more time, here are the targeted architectural enhancements:
+1. **Idempotency-Key Support on `POST /api/orders`**:
+   - Store header `Idempotency-Key: <uuid>` in an `idempotency_keys` table with hashed payload and cached response to guarantee duplicate network retries never double-charge inventory.
+2. **Daily Sales & Inventory Reporting**:
+   - Add `GET /api/reports/daily-sales?date=YYYY-MM-DD` aggregating revenue, gross order count, and top-selling SKUs for the warehouse supervisor dashboard.
+3. **Soft-Delete Archive (`deleted_at`)**:
+   - While products with movement history cannot be permanently purged to preserve financial and audit records, a soft-delete status would allow archiving legacy SKUs without breaking historical order item foreign keys.
+4. **Read Replica & Query Cache**:
+   - For warehouse scale with millions of movement records, add Redis caching or a materialized view refreshed periodically for `last_movement_at` and catalog search.
+5. **Cursor-based Pagination**:
+   - Replace offset pagination with keyset (`created_at, id`) pagination to avoid degradation on very large product tables.
+
+---
+
+## ⏱️ Honest Hours Spent
+
+Total focused time: **~5.5 hours**
+
+| Phase | Description | Hours |
+|---|---|---|
+| **Phase 1: Backend Foundation** | Database schema, foreign keys, indexes, seeds, Chi router & repositories | ~1.5 h |
+| **Phase 2: Concurrency & Safety** | Atomic SQL update predicates, transaction isolation, Go test suite & race checks | ~1.0 h |
+| **Phase 3: Docker & DevOps** | Multi-stage Dockerfiles (Go Alpine, Vite Nginx), docker-compose, auto-migrations | ~0.5 h |
+| **Phase 4: Frontend & Vitest** | React 19 + TypeScript, Dark modern UI, search debounce, modal flows, Vitest suite | ~1.5 h |
+| **Phase 5: Documentation & Polish**| Cross-stack error verification, cURL test examples, Git commits & README | ~1.0 h |
+| **Total** | | **~5.5 h** |

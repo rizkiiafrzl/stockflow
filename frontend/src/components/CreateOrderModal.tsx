@@ -1,9 +1,8 @@
-import { useState, useCallback } from 'react'
-import { createOrder } from '../api/client'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { createOrder, getProducts } from '../api/client'
 import { APIError } from '../types'
-import type { SalesOrder } from '../types'
+import type { SalesOrder, Product } from '../types'
 import { formatRupiah } from '../utils/format'
-
 import { validateOrder } from '../utils/validation'
 
 interface Props {
@@ -16,13 +15,37 @@ interface Item { sku: string; qty: string }
 export default function CreateOrderModal({ onClose, onSuccess }: Props) {
   const [customer, setCustomer] = useState('')
   const [items, setItems] = useState<Item[]>([{ sku: '', qty: '' }])
+  const [catalog, setCatalog] = useState<Product[]>([])
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [stockError, setStockError] = useState<{ sku: string; available: number } | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
+
+  // Fetch product catalog for instant auto-suggestions
+  useEffect(() => {
+    getProducts({ limit: 100 })
+      .then(res => setCatalog(res.data))
+      .catch(() => {})
+  }, [])
+
+  // Close autocomplete dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setActiveDropdown(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const addItem = () => setItems(prev => [...prev, { sku: '', qty: '' }])
-  const removeItem = (i: number) => setItems(prev => prev.filter((_, idx) => idx !== i))
+  const removeItem = (i: number) => {
+    setItems(prev => prev.filter((_, idx) => idx !== i))
+    if (activeDropdown === i) setActiveDropdown(null)
+  }
   const updateItem = (i: number, field: keyof Item, val: string) => {
     setItems(prev => prev.map((it, idx) => idx === i ? { ...it, [field]: val } : it))
     setErrors({})
@@ -88,35 +111,103 @@ export default function CreateOrderModal({ onClose, onSuccess }: Props) {
           <div className="field">
             <label>Items</label>
             <div className="order-items-list">
-              {items.map((item, i) => (
-                <div key={i} className="order-item-row">
-                  <div className="field" style={{ flex: 2 }}>
-                    <label style={{ fontSize: 11 }}>SKU</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. SKU-001"
-                      value={item.sku}
-                      onChange={(e) => updateItem(i, 'sku', e.target.value)}
-                      style={stockError?.sku === item.sku ? { borderColor: 'var(--danger)' } : {}}
-                    />
-                    {errors[`sku_${i}`] && <span className="field-error">{errors[`sku_${i}`]}</span>}
+              {items.map((item, i) => {
+                const searchLower = item.sku.trim().toLowerCase()
+                const suggestions = catalog.filter(p =>
+                  p.is_active && (
+                    p.sku.toLowerCase().includes(searchLower) ||
+                    p.name.toLowerCase().includes(searchLower)
+                  )
+                ).slice(0, 8)
+                const matched = catalog.find(p => p.sku.toLowerCase() === item.sku.trim().toLowerCase())
+                const qtyNum = parseInt(item.qty, 10)
+                const isOverStock = matched && !isNaN(qtyNum) && qtyNum > matched.stock
+
+                return (
+                  <div key={i} className="order-item-row" style={{ flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', gap: 10, width: '100%', alignItems: 'flex-start' }}>
+                      {/* SKU Input with autocomplete */}
+                      <div className="field" style={{ flex: 2 }}>
+                        <label style={{ fontSize: 11 }}>SKU / Product Name</label>
+                        <div
+                          className="autocomplete-wrapper"
+                          ref={activeDropdown === i ? dropdownRef : undefined}
+                        >
+                          <input
+                            type="text"
+                            placeholder="Type SKU or product name..."
+                            value={item.sku}
+                            onChange={(e) => {
+                              updateItem(i, 'sku', e.target.value)
+                              setActiveDropdown(i)
+                            }}
+                            onFocus={() => setActiveDropdown(i)}
+                            style={stockError?.sku === item.sku ? { borderColor: 'var(--danger)' } : {}}
+                            autoComplete="off"
+                          />
+                          {activeDropdown === i && suggestions.length > 0 && (
+                            <div className="autocomplete-dropdown">
+                              {suggestions.map(p => (
+                                <div
+                                  key={p.sku}
+                                  className="autocomplete-item"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault()
+                                    updateItem(i, 'sku', p.sku)
+                                    setActiveDropdown(null)
+                                  }}
+                                >
+                                  <span className="sku-tag">{p.sku}</span>
+                                  <span style={{ fontWeight: 500, color: 'var(--text)' }}>{p.name}</span>
+                                  <span style={{ marginLeft: 'auto', fontSize: 11, color: p.stock <= 10 ? 'var(--warning)' : 'var(--success)' }}>
+                                    Stok: {p.stock} · {formatRupiah(p.price)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {errors[`sku_${i}`] && <span className="field-error">{errors[`sku_${i}`]}</span>}
+                      </div>
+
+                      {/* Qty Input */}
+                      <div className="field" style={{ flex: 1 }}>
+                        <label style={{ fontSize: 11 }}>Qty</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={matched ? matched.stock : undefined}
+                          placeholder={matched ? `1 - ${matched.stock}` : "1"}
+                          value={item.qty}
+                          onChange={(e) => updateItem(i, 'qty', e.target.value)}
+                        />
+                        {errors[`qty_${i}`] && <span className="field-error">{errors[`qty_${i}`]}</span>}
+                      </div>
+
+                      {items.length > 1 && (
+                        <button className="remove-item-btn" onClick={() => removeItem(i)}>✕</button>
+                      )}
+                    </div>
+
+                    {/* Matched product preview info */}
+                    {matched && (
+                      <div className="product-hint">
+                        <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>✓</span>
+                        <strong style={{ color: 'var(--text)' }}>{matched.name}</strong>
+                        <span>·</span>
+                        <span style={{ color: 'var(--accent)' }}>{formatRupiah(matched.price)}</span>
+                        <span>·</span>
+                        <span>Tersedia: <strong style={{ color: matched.stock <= 10 ? 'var(--warning)' : 'var(--success)' }}>{matched.stock} unit</strong></span>
+                        {isOverStock && (
+                          <span style={{ color: 'var(--danger)', fontWeight: 600, marginLeft: 6 }}>
+                            ⚠ Qty melebihi stok yang ada ({matched.stock})
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label style={{ fontSize: 11 }}>Qty</label>
-                    <input
-                      type="number"
-                      min={1}
-                      placeholder="1"
-                      value={item.qty}
-                      onChange={(e) => updateItem(i, 'qty', e.target.value)}
-                    />
-                    {errors[`qty_${i}`] && <span className="field-error">{errors[`qty_${i}`]}</span>}
-                  </div>
-                  {items.length > 1 && (
-                    <button className="remove-item-btn" onClick={() => removeItem(i)}>✕</button>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
             <button
               type="button"

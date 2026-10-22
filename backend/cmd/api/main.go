@@ -25,14 +25,14 @@ func main() {
 		log.Println("No .env file found, reading env vars from environment")
 	}
 
-	// Build DSN from environment
+	// Build DSN from environment with sensible local defaults
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
+		getEnv("DB_HOST", "localhost"),
+		getEnv("DB_PORT", "5432"),
+		getEnv("DB_USER", "postgres"),
+		getEnv("DB_PASSWORD", "1234"),
+		getEnv("DB_NAME", "stockflow_db"),
 	)
 
 	// Open DB connection
@@ -150,3 +150,10 @@ func runMigrations(db *sql.DB) {
 		}
 	}
 }
+
+func getEnv(key, defaultVal string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return defaultVal
+}

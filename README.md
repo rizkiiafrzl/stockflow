@@ -1,4 +1,4 @@
-# Stockflow 📦
+# Stockflow
 
 A full-stack warehouse management application built for warehouse supervisors to manage products, adjust stock levels, and record sales orders that safely consume inventory under concurrent load.
 
@@ -6,7 +6,7 @@ Built as an end-to-end vertical slice: **PostgreSQL → Go REST API → React + 
 
 ---
 
-## 🌟 Key Features & Architectural Highlights
+## Key Features & Architectural Highlights
 
 1. **Concurrency Safety & Atomic Inventory**:
    - Guarded against race conditions and overselling using atomic SQL conditional updates (`UPDATE products SET stock = stock - $qty WHERE id = $id AND stock >= $qty`) and pessimistic locking (`SELECT ... FOR UPDATE`) within ACID transactions.
@@ -22,7 +22,7 @@ Built as an end-to-end vertical slice: **PostgreSQL → Go REST API → React + 
 
 ---
 
-## 🏗️ Repository Layout
+## Repository Layout
 
 ```
 stockflow/
@@ -81,7 +81,7 @@ stockflow/
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ### Option 1: Docker Compose (All-in-One)
 
@@ -104,7 +104,13 @@ The PostgreSQL container automatically runs migrations and seeds initial product
 
 #### 1. Database (PostgreSQL)
 Ensure PostgreSQL is running on `localhost:5432` with a database named `stockflow_db`.
-Configured via `backend/.env`:
+Copy the example environment file and adjust credentials if needed:
+```bash
+cd backend
+cp .env.example .env    # Linux / macOS
+copy .env.example .env  # Windows
+```
+Default configuration (`backend/.env.example`):
 ```env
 DB_HOST=localhost
 DB_PORT=5432
@@ -112,6 +118,7 @@ DB_USER=postgres
 DB_PASSWORD=1234
 DB_NAME=stockflow_db
 ```
+*(Note: Sensible defaults are also embedded as code-level fallbacks in the Go service).*
 
 #### 2. Backend Service
 ```bash
@@ -130,7 +137,7 @@ Open http://localhost:5173 in your browser. Requests to `/api/*` are automatical
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ### Backend Tests (Go)
 Includes concurrency race testing, stock overdraw validation, rollback guarantees, and deletion safety:
@@ -153,7 +160,7 @@ npm test
 
 ---
 
-## 🧠 Design Decisions & Trade-offs
+## Design Decisions & Trade-offs
 
 ### 1. Concurrency Control & Stock Safety
 - **Anti-pattern avoided**: `SELECT stock FROM products ...` followed by application-level checks and `UPDATE products SET stock = ...`. Under concurrent orders, multiple requests read the same initial stock and both proceed, resulting in negative stock.
@@ -185,7 +192,7 @@ npm test
 
 ---
 
-## 📡 API Contract & Ready-to-Run cURL Examples
+## API Contract & Ready-to-Run cURL Examples
 
 Assume the backend server is listening on `http://localhost:8080`.
 
@@ -283,7 +290,7 @@ curl -X POST "http://localhost:8080/api/orders/1/cancel"
 
 ---
 
-## 🔮 What I Would Improve Next
+## What I Would Improve Next
 
 Given more time, here are the targeted architectural enhancements:
 1. **Idempotency-Key Support on `POST /api/orders`**:
@@ -299,7 +306,7 @@ Given more time, here are the targeted architectural enhancements:
 
 ---
 
-## ⏱️ Honest Hours Spent
+## Honest Hours Spent
 
 Total focused time: **~5.5 hours**
 

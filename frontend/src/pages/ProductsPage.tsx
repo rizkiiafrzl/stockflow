@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAsync, useDebounce } from '../hooks/useAsync'
 import { getProducts, deleteProduct } from '../api/client'
 import { APIError } from '../types'
@@ -15,6 +16,7 @@ type Filter = 'all' | 'active' | 'inactive' | 'low'
 const LIMIT = 15
 
 export default function ProductsPage() {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [page, setPage] = useState(1)
@@ -262,7 +264,17 @@ export default function ProductsPage() {
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
+            <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  const targetId = createdOrder.id
+                  setCreatedOrder(null)
+                  navigate(`/orders/${targetId}`)
+                }}
+              >
+                View Order #{createdOrder.id} Detail →
+              </button>
               <button className="btn btn-primary" onClick={() => { setCreatedOrder(null); refetch() }}>Done</button>
             </div>
           </div>
